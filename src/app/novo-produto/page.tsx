@@ -5,7 +5,7 @@ import { firestore, storage } from '@/lib/firebase';
 import { ref, uploadBytes, getDownloadURL } from 'firebase/storage';
 import { collection, addDoc, Timestamp } from 'firebase/firestore';
 
-export default function HomePage() {
+export default function NovoProdutoPage() {
   const [foto, setFoto] = useState<File | null>(null);
   const [descricao, setDescricao] = useState('');
   const [valor, setValor] = useState('');
@@ -23,8 +23,8 @@ export default function HomePage() {
   }
 
   function togglePagamento(forma: string) {
-    setPagamento(prev =>
-      prev.includes(forma) ? prev.filter(f => f !== forma) : [...prev, forma]
+    setPagamento((prev) =>
+      prev.includes(forma) ? prev.filter((f) => f !== forma) : [...prev, forma]
     );
   }
 
@@ -67,7 +67,7 @@ export default function HomePage() {
 
   return (
     <main style={{ maxWidth: 600, margin: 'auto', padding: 20 }}>
-      <h1>Painel de Controle - Cadastro de Produtos</h1>
+      <h1>Cadastrar Novo Produto</h1>
 
       {erro && <p style={{ color: 'red' }}>{erro}</p>}
       {sucesso && <p style={{ color: 'green' }}>{sucesso}</p>}

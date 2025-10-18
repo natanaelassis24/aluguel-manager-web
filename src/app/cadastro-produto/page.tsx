@@ -5,7 +5,7 @@ import { firestore, storage } from '@/lib/firebase';
 import { ref, uploadBytes, getDownloadURL } from 'firebase/storage';
 import { collection, addDoc, Timestamp } from 'firebase/firestore';
 
-export default function HomePage() {
+export default function CadastroProduto() {
   const [foto, setFoto] = useState<File | null>(null);
   const [descricao, setDescricao] = useState('');
   const [valor, setValor] = useState('');
@@ -39,10 +39,12 @@ export default function HomePage() {
     }
 
     try {
+      // Upload da foto para Storage
       const storageRef = ref(storage, `produtos/${foto.name}-${Date.now()}`);
       await uploadBytes(storageRef, foto);
       const fotoURL = await getDownloadURL(storageRef);
 
+      // Salvar dados no Firestore
       await addDoc(collection(firestore, 'produtos'), {
         descricao,
         valor: parseFloat(valor),
@@ -53,6 +55,7 @@ export default function HomePage() {
       });
 
       setSucesso('Produto cadastrado com sucesso!');
+      // Limpar campos
       setDescricao('');
       setValor('');
       setPagamento([]);
@@ -66,71 +69,69 @@ export default function HomePage() {
   }
 
   return (
-    <main style={{ maxWidth: 600, margin: 'auto', padding: 20 }}>
-      <h1>Painel de Controle - Cadastro de Produtos</h1>
+    <form onSubmit={handleSubmit} style={{ maxWidth: 600, margin: 'auto', padding: 20 }}>
+      <h1>Cadastrar Produto</h1>
 
       {erro && <p style={{ color: 'red' }}>{erro}</p>}
       {sucesso && <p style={{ color: 'green' }}>{sucesso}</p>}
 
-      <form onSubmit={handleSubmit}>
-        <label>
-          Foto:
-          <input id="inputFoto" type="file" accept="image/*" onChange={handleFotoChange} />
-        </label>
+      <label>
+        Foto:
+        <input id="inputFoto" type="file" accept="image/*" onChange={handleFotoChange} />
+      </label>
 
-        <label>
-          Descrição:
-          <textarea
-            value={descricao}
-            onChange={(e) => setDescricao(e.target.value)}
-            required
-            rows={3}
-            style={{ width: '100%', marginBottom: 10 }}
-          />
-        </label>
+      <label>
+        Descrição:
+        <textarea
+          value={descricao}
+          onChange={(e) => setDescricao(e.target.value)}
+          required
+          rows={3}
+          style={{ width: '100%', marginBottom: 10 }}
+        />
+      </label>
 
-        <label>
-          Valor do Aluguel:
-          <input
-            type="number"
-            value={valor}
-            onChange={(e) => setValor(e.target.value)}
-            required
-            min="0"
-            step="0.01"
-            style={{ width: '100%', marginBottom: 10 }}
-          />
-        </label>
+      <label>
+        Valor do Aluguel:
+        <input
+          type="number"
+          value={valor}
+          onChange={(e) => setValor(e.target.value)}
+          required
+          min="0"
+          step="0.01"
+          style={{ width: '100%', marginBottom: 10 }}
+        />
+      </label>
 
-        <fieldset style={{ marginBottom: 10 }}>
-          <legend>Formas de Pagamento:</legend>
-          {formasPagamento.map((forma) => (
-            <label key={forma} style={{ display: 'block' }}>
-              <input
-                type="checkbox"
-                checked={pagamento.includes(forma)}
-                onChange={() => togglePagamento(forma)}
-              />
-              {forma}
-            </label>
-          ))}
-        </fieldset>
+      <fieldset style={{ marginBottom: 10 }}>
+        <legend>Formas de Pagamento:</legend>
+        {formasPagamento.map((forma) => (
+          <label key={forma} style={{ display: 'block' }}>
+            <input
+              type="checkbox"
+              checked={pagamento.includes(forma)}
+              onChange={() => togglePagamento(forma)}
+            />
+            {forma}
+          </label>
+        ))}
+      </fieldset>
 
-        <label>
-          Data de Vencimento:
-          <input
-            type="date"
-            value={vencimento}
-            onChange={(e) => setVencimento(e.target.value)}
-            required
-            style={{ width: '100%', marginBottom: 10 }}
-          />
-        </label>
+      <label>
+        Data de Vencimento:
+        <input
+          type="date"
+          value={vencimento}
+          onChange={(e) => setVencimento(e.target.value)}
+          required
+          style={{ width: '100%', marginBottom: 10 }}
+        />
+      </label>
 
-        <button type="submit" style={{ padding: '10px 20px' }}>
-          Cadastrar Produto
-        </button>
-      </form>
-    </main>
+      <button type="submit" style={{ padding: '10px 20px' }}>
+        Cadastrar Produto
+      </button>
+    </form>
   );
 }
