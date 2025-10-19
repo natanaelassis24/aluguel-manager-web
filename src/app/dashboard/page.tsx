@@ -81,14 +81,44 @@ export default function DashboardPage() {
     setLoading(false);
   }
 
-  const dadosGrafico = [
-    { mes: 'Jan', valor: 1200 },
-    { mes: 'Fev', valor: 2100 },
-    { mes: 'Mar', valor: 800 },
-    { mes: 'Abr', valor: 1600 },
-    { mes: 'Mai', valor: 900 },
-    { mes: 'Jun', valor: 1700 },
-  ];
+  // Gera dados reais para o gráfico a partir dos aluguéis pagos agrupados por mês e ano
+  function gerarDadosGrafico(alugueis: Aluguel[]) {
+    const meses = ['Jan', 'Fev', 'Mar', 'Abr', 'Mai', 'Jun', 'Jul', 'Ago', 'Set', 'Out', 'Nov', 'Dez'];
+
+    const valoresPorMesAno: Record<string, number> = {};
+
+    alugueis.forEach((a) => {
+      if (a.pago && a.dataVencimento) {
+        const data = a.dataVencimento.toDate();
+        const mes = data.getMonth();
+        const ano = data.getFullYear();
+        const chave = `${mes}-${ano}`;
+
+        if (!valoresPorMesAno[chave]) {
+          valoresPorMesAno[chave] = 0;
+        }
+        valoresPorMesAno[chave] += a.valor;
+      }
+    });
+
+    const dados = Object.entries(valoresPorMesAno)
+      .map(([chave, valor]) => {
+        const [mes, ano] = chave.split('-').map(Number);
+        return { mes, ano, valor };
+      })
+      .sort((a, b) => {
+        if (a.ano !== b.ano) return a.ano - b.ano;
+        return a.mes - b.mes;
+      })
+      .map(({ mes, ano, valor }) => ({
+        mes: `${meses[mes]}/${ano}`,
+        valor,
+      }));
+
+    return dados;
+  }
+
+  const dadosGrafico = gerarDadosGrafico(alugueis);
 
   if (loading) return <p>Carregando...</p>;
 
@@ -117,15 +147,19 @@ export default function DashboardPage() {
       {/* Gráfico */}
       <div className="bg-white p-6 rounded shadow mb-8" style={{ height: '300px', minHeight: '250px' }}>
         <h2 className="text-lg font-semibold mb-4">Recebimentos nos últimos meses</h2>
-        <ResponsiveContainer width="100%" height="100%">
-          <BarChart data={dadosGrafico} margin={{ top: 5, right: 30, left: 20, bottom: 5 }}>
-            <CartesianGrid strokeDasharray="3 3" />
-            <XAxis dataKey="mes" />
-            <YAxis />
-            <Tooltip formatter={(value: number) => `R$ ${value.toFixed(2)}`} />
-            <Bar dataKey="valor" fill="#3182ce" />
-          </BarChart>
-        </ResponsiveContainer>
+        {dadosGrafico.length === 0 ? (
+          <p className="text-center text-gray-500">Sem dados para mostrar no gráfico.</p>
+        ) : (
+          <ResponsiveContainer width="100%" height="100%">
+            <BarChart data={dadosGrafico} margin={{ top: 5, right: 30, left: 20, bottom: 5 }}>
+              <CartesianGrid strokeDasharray="3 3" />
+              <XAxis dataKey="mes" />
+              <YAxis />
+              <Tooltip formatter={(value: number) => `R$ ${value.toFixed(2)}`} />
+              <Bar dataKey="valor" fill="#3182ce" />
+            </BarChart>
+          </ResponsiveContainer>
+        )}
       </div>
 
       {/* Lista de Pendentes */}
