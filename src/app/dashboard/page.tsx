@@ -4,7 +4,7 @@ import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { onAuthStateChanged } from 'firebase/auth';
 import { auth, firestore } from '@/lib/firebase';
-import { collection, query, where, getDocs, Timestamp } from 'firebase/firestore';
+import { collection, query, getDocs, Timestamp } from 'firebase/firestore';
 import {
   BarChart,
   Bar,
@@ -27,7 +27,6 @@ export default function DashboardPage() {
   const [loading, setLoading] = useState(true);
   const [alugueis, setAlugueis] = useState<Aluguel[]>([]);
 
-  // Dados para os cards
   const [totalRecebido, setTotalRecebido] = useState(0);
   const [totalPendente, setTotalPendente] = useState(0);
   const [totalAlugueis, setTotalAlugueis] = useState(0);
@@ -48,7 +47,6 @@ export default function DashboardPage() {
     setLoading(true);
 
     try {
-      // Exemplo: pegar todos os alugueis (você pode adaptar a consulta)
       const q = query(collection(firestore, 'alugueis'));
       const querySnapshot = await getDocs(q);
 
@@ -83,8 +81,6 @@ export default function DashboardPage() {
     setLoading(false);
   }
 
-  // Dados simulados para gráfico mensal
-  // Aqui você pode adaptar para buscar do Firestore agrupado por mês
   const dadosGrafico = [
     { mes: 'Jan', valor: 1200 },
     { mes: 'Fev', valor: 2100 },
@@ -97,7 +93,7 @@ export default function DashboardPage() {
   if (loading) return <p>Carregando...</p>;
 
   return (
-    <div style={{ maxWidth: 960, margin: 'auto', padding: 20 }}>
+    <div className="max-w-4xl mx-auto p-4 sm:p-6">
       <h1 className="text-3xl font-bold mb-6">Dashboard</h1>
 
       {/* Cards */}
@@ -119,7 +115,7 @@ export default function DashboardPage() {
       </div>
 
       {/* Gráfico */}
-      <div className="bg-white p-6 rounded shadow mb-8" style={{ height: 300 }}>
+      <div className="bg-white p-6 rounded shadow mb-8" style={{ height: '300px', minHeight: '250px' }}>
         <h2 className="text-lg font-semibold mb-4">Recebimentos nos últimos meses</h2>
         <ResponsiveContainer width="100%" height="100%">
           <BarChart data={dadosGrafico} margin={{ top: 5, right: 30, left: 20, bottom: 5 }}>
@@ -142,7 +138,7 @@ export default function DashboardPage() {
             {alugueis
               .filter(a => !a.pago)
               .map((a) => (
-                <li key={a.id} className="mb-2 border-b border-gray-200 pb-2">
+                <li key={a.id} className="mb-2 border-b border-gray-200 pb-2 break-words">
                   Valor: R$ {a.valor.toFixed(2)} — Vencimento:{' '}
                   {a.dataVencimento.toDate().toLocaleDateString()}
                 </li>
