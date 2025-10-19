@@ -10,6 +10,7 @@ export default function SidebarWrapper({ children }: { children: React.ReactNode
   const pathname = usePathname();
   const [user, setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
+  const [isOpen, setIsOpen] = useState(false); // 🔄 COMEÇA FECHADA AQUI
 
   const publicPaths = ['/login', '/cadastro'];
 
@@ -36,10 +37,10 @@ export default function SidebarWrapper({ children }: { children: React.ReactNode
 
   return (
     <>
-      {showSidebar && <Cydebar />}
+      {showSidebar && <Cydebar isOpen={isOpen} setIsOpen={setIsOpen} />}
       <main
-        className="flex-1 p-6 overflow-auto"
-        style={{ marginLeft: showSidebar ? '16rem' : 0 }}
+        className="flex-1 p-6 overflow-auto transition-all duration-300"
+        style={{ marginLeft: showSidebar && isOpen ? '16rem' : '0' }}
       >
         {children}
       </main>
