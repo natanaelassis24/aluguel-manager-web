@@ -1,11 +1,30 @@
 'use client';
 
-import { useState } from 'react';
-import { firestore, storage } from '@/lib/firebase';
+import { useState, useEffect } from 'react';
+import { useRouter } from 'next/navigation';
+import { onAuthStateChanged } from 'firebase/auth';
+import { firestore, storage, auth } from '@/lib/firebase'; // <- Certifique-se que o auth está sendo exportado
+
 import { ref, uploadBytes, getDownloadURL } from 'firebase/storage';
 import { collection, addDoc, Timestamp } from 'firebase/firestore';
 
 export default function HomePage() {
+  const router = useRouter();
+  const [loading, setLoading] = useState(true); // Para aguardar verificação do login
+
+  // Protege a rota
+  useEffect(() => {
+    const unsubscribe = onAuthStateChanged(auth, (user) => {
+      if (!user) {
+        router.push('/login'); // Redireciona se não estiver autenticado
+      } else {
+        setLoading(false); // Mostra o painel se estiver autenticado
+      }
+    });
+
+    return () => unsubscribe();
+  }, [router]);
+
   const [foto, setFoto] = useState<File | null>(null);
   const [descricao, setDescricao] = useState('');
   const [valor, setValor] = useState('');
@@ -64,6 +83,8 @@ export default function HomePage() {
       console.error(error);
     }
   }
+
+  if (loading) return <p>Verificando autenticação...</p>;
 
   return (
     <main style={{ maxWidth: 600, margin: 'auto', padding: 20 }}>
