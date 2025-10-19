@@ -10,7 +10,7 @@ export default function SidebarWrapper({ children }: { children: React.ReactNode
   const pathname = usePathname();
   const [user, setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
-  const [isOpen, setIsOpen] = useState(false); // 🔄 COMEÇA FECHADA AQUI
+  const [isSidebarOpen, setIsSidebarOpen] = useState(false);
 
   const publicPaths = ['/login', '/cadastro'];
 
@@ -36,14 +36,18 @@ export default function SidebarWrapper({ children }: { children: React.ReactNode
   const showSidebar = user !== null && !publicPaths.includes(pathname);
 
   return (
-    <>
-      {showSidebar && <Cydebar isOpen={isOpen} setIsOpen={setIsOpen} />}
+    <div className="flex w-full min-h-screen transition-all duration-300 ease-in-out">
+      {showSidebar && (
+        <Cydebar isOpen={isSidebarOpen} setIsOpen={setIsSidebarOpen} />
+      )}
+
       <main
-        className="flex-1 p-6 overflow-auto transition-all duration-300"
-        style={{ marginLeft: showSidebar && isOpen ? '16rem' : '0' }}
+        className={`transition-all duration-300 ease-in-out flex-1 p-6 overflow-auto ${
+          showSidebar && isSidebarOpen ? 'pl-64' : 'pl-16'
+        }`}
       >
         {children}
       </main>
-    </>
+    </div>
   );
 }
