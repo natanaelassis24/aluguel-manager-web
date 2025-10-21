@@ -3,7 +3,6 @@ import type { NextConfig } from 'next';
 
 const nextConfig: NextConfig = {
   reactStrictMode: true,
-  // outras configs que você quiser manter
 };
 
 export default withPWA({
@@ -11,4 +10,7 @@ export default withPWA({
   register: true,
   skipWaiting: true,
   disable: process.env.NODE_ENV === 'development',
+  fallbacks: {
+    document: '/offline', // 👈 ESSA LINHA é crucial!
+  },
 })(nextConfig);
