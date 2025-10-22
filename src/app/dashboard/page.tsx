@@ -2,184 +2,291 @@
 
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { onAuthStateChanged } from 'firebase/auth';
+// Firebase
+import { onAuthStateChanged, signOut } from 'firebase/auth';
 import { auth, firestore } from '@/lib/firebase';
 import { collection, query, getDocs, Timestamp } from 'firebase/firestore';
+// Gráfico e ícones
 import {
-  BarChart,
-  Bar,
-  XAxis,
-  YAxis,
-  CartesianGrid,
-  Tooltip,
-  ResponsiveContainer,
+    BarChart,
+    Bar,
+    XAxis,
+    YAxis,
+    CartesianGrid,
+    Tooltip,
+    ResponsiveContainer,
 } from 'recharts';
+import { FaPlus, FaSearch, FaUserCircle, FaHome, FaCreditCard, FaWallet, FaChartPie, FaCog, FaSignOutAlt } from 'react-icons/fa';
+import Link from 'next/link';
 
+// Tipagem do aluguel
 interface Aluguel {
-  id: string;
-  valor: number;
-  pago: boolean;
-  dataVencimento: Timestamp;
+    id: string;
+    valor: number;
+    pago: boolean;
+    dataVencimento: Timestamp;
 }
 
+// Funções utilitárias
+const formatarMoeda = (valor: number) => `R$ ${valor.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}`;
+function calcularTotalRecebido(alugueis: Aluguel[]) {
+    return alugueis.filter(a => a.pago).reduce((acc, a) => acc + a.valor, 0);
+}
+function calcularTotalPendente(alugueis: Aluguel[]) {
+    return alugueis.filter(a => !a.pago).reduce((acc, a) => acc + a.valor, 0);
+}
+function gerarDadosGrafico(alugueis: Aluguel[]) {
+    const meses = ['Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug'];
+    return meses.map((mes) => ({ mes, valor: 0 }));
+}
+
+// Sidebar com botão de sair incluído
+const IconNavbar = () => {
+    const router = useRouter();
+
+    const handleLogout = async () => {
+        try {
+            await signOut(auth);
+            router.push('/login');
+        } catch (error) {
+            console.error('Erro ao deslogar:', error);
+            alert('Não foi possível deslogar. Tente novamente.');
+        }
+    };
+
+    const pathname = '/dashboard';
+    const navItems = [
+        { name: 'Dashboard', icon: <FaHome />, href: '/dashboard' },
+        { name: 'Cards', icon: <FaCreditCard />, href: '/cards' },
+        { name: 'Wallet', icon: <FaWallet />, href: '/wallet' },
+        { name: 'Stats', icon: <FaChartPie />, href: '/stats' },
+    ];
+
+    return (
+        <aside className="fixed top-0 left-0 h-screen w-20 bg-gray-900 border-r border-gray-800 flex flex-col justify-between items-center py-4 z-50">
+            <div className="flex flex-col items-center space-y-8">
+                {/* Logo N */}
+                <div className="flex items-center space-x-2 p-2 pt-0">
+                    <div className="p-2 bg-teal-600 rounded-full">
+                        <span className="text-white font-bold text-lg">N</span>
+                    </div>
+                </div>
+
+                {/* Navegação */}
+                <nav className="flex flex-col gap-4 w-full pt-4">
+                    {navItems.map((item) => (
+                        <Link
+                            key={item.name}
+                            href={item.href}
+                            className={`flex items-center justify-center p-3 rounded-xl mx-2 transition duration-200 ease-in-out ${
+                                pathname === item.href
+                                    ? 'bg-white text-gray-900 shadow-md'
+                                    : 'text-gray-400 hover:bg-gray-800 hover:text-white'
+                            }`}
+                        >
+                            <span className="text-xl">{item.icon}</span>
+                        </Link>
+                    ))}
+                </nav>
+            </div>
+
+            {/* Configurações e logout */}
+            <div className="flex flex-col items-center gap-4 w-full">
+                <Link
+                    href="/settings"
+                    className="flex items-center justify-center p-3 rounded-xl mx-2 transition duration-200 ease-in-out text-gray-400 hover:bg-gray-800 hover:text-white"
+                >
+                    <FaCog size={20} />
+                </Link>
+
+                <button
+                    onClick={handleLogout}
+                    className="flex items-center justify-center p-3 rounded-xl mx-2 text-red-400 hover:bg-gray-800 hover:text-red-300 transition"
+                    aria-label="Sair"
+                >
+                    <FaSignOutAlt size={20} />
+                </button>
+            </div>
+        </aside>
+    );
+};
+
 export default function DashboardPage() {
-  const router = useRouter();
-  const [loading, setLoading] = useState(true);
-  const [alugueis, setAlugueis] = useState<Aluguel[]>([]);
+    const router = useRouter();
+    const [loading, setLoading] = useState(true);
+    const [alugueis, setAlugueis] = useState<Aluguel[]>([]);
+    const [userName, setUserName] = useState<string>('Gestor');
 
-  const [totalRecebido, setTotalRecebido] = useState(0);
-  const [totalPendente, setTotalPendente] = useState(0);
-  const [totalAlugueis, setTotalAlugueis] = useState(0);
-
-  useEffect(() => {
-    const unsubscribe = onAuthStateChanged(auth, (user) => {
-      if (!user) {
-        router.push('/login');
-      } else {
-        carregarDados();
-      }
-    });
-
-    return () => unsubscribe();
-  }, [router]);
-
-  async function carregarDados() {
-    setLoading(true);
-
-    try {
-      const q = query(collection(firestore, 'alugueis'));
-      const querySnapshot = await getDocs(q);
-
-      const alugueisData: Aluguel[] = [];
-      querySnapshot.forEach(doc => {
-        const data = doc.data();
-        alugueisData.push({
-          id: doc.id,
-          valor: data.valor,
-          pago: data.pago,
-          dataVencimento: data.dataVencimento,
-        });
-      });
-
-      setAlugueis(alugueisData);
-      setTotalAlugueis(alugueisData.length);
-
-      const recebido = alugueisData
-        .filter(a => a.pago)
-        .reduce((acc, a) => acc + a.valor, 0);
-      const pendente = alugueisData
-        .filter(a => !a.pago)
-        .reduce((acc, a) => acc + a.valor, 0);
-
-      setTotalRecebido(recebido);
-      setTotalPendente(pendente);
-
-    } catch (error) {
-      console.error('Erro ao carregar alugueis:', error);
+    async function carregarDados(userId: string) {
+        setLoading(true);
+        try {
+            setUserName('Gestor');
+            setAlugueis([]);
+            setLoading(false);
+        } catch (error) {
+            console.error('Erro ao carregar dados:', error);
+            setUserName('Gestor');
+            setAlugueis([]);
+            setLoading(false);
+        }
     }
 
-    setLoading(false);
-  }
+    useEffect(() => {
+        const unsubscribe = onAuthStateChanged(auth, (user) => {
+            if (!user) {
+                setLoading(false);
+                setAlugueis([]);
+                setUserName('Visitante');
+            } else {
+                carregarDados(user.uid || 'placeholder');
+            }
+        });
 
-  // Gera dados reais para o gráfico a partir dos aluguéis pagos agrupados por mês e ano
-  function gerarDadosGrafico(alugueis: Aluguel[]) {
-    const meses = ['Jan', 'Fev', 'Mar', 'Abr', 'Mai', 'Jun', 'Jul', 'Ago', 'Set', 'Out', 'Nov', 'Dez'];
+        return () => unsubscribe();
+    }, [router]);
 
-    const valoresPorMesAno: Record<string, number> = {};
+    const totalRecebido = calcularTotalRecebido(alugueis);
+    const totalPendente = calcularTotalPendente(alugueis);
+    const dadosGrafico = gerarDadosGrafico(alugueis);
+    const porcentagemProjecao = 0;
 
-    alugueis.forEach((a) => {
-      if (a.pago && a.dataVencimento) {
-        const data = a.dataVencimento.toDate();
-        const mes = data.getMonth();
-        const ano = data.getFullYear();
-        const chave = `${mes}-${ano}`;
+    if (loading) {
+        return (
+            <div className="text-white bg-gray-900 min-h-screen flex items-center justify-center">
+                <p className="text-xl">Carregando Dashboard...</p>
+            </div>
+        );
+    }
 
-        if (!valoresPorMesAno[chave]) {
-          valoresPorMesAno[chave] = 0;
-        }
-        valoresPorMesAno[chave] += a.valor;
-      }
-    });
+    return (
+        <div className="flex min-h-screen bg-gray-900 text-gray-100">
+            <IconNavbar />
 
-    const dados = Object.entries(valoresPorMesAno)
-      .map(([chave, valor]) => {
-        const [mes, ano] = chave.split('-').map(Number);
-        return { mes, ano, valor };
-      })
-      .sort((a, b) => {
-        if (a.ano !== b.ano) return a.ano - b.ano;
-        return a.mes - b.mes;
-      })
-      .map(({ mes, ano, valor }) => ({
-        mes: `${meses[mes]}/${ano}`,
-        valor,
-      }));
+            <main className="flex-1 pl-20 p-4 sm:p-8">
+                <div className="max-w-7xl mx-auto">
+                    {/* Header */}
+                    <div className="flex justify-between items-center mb-8 pt-4">
+                        <h1 className="text-3xl font-bold text-white">Dashboard de Aluguéis</h1>
 
-    return dados;
-  }
+                        <div className="flex items-center space-x-6">
+                            {/* Search */}
+                            <div className="relative hidden sm:block">
+                                <input
+                                    type="text"
+                                    placeholder="Buscar Contrato/Locatário"
+                                    className="bg-gray-800 text-gray-300 rounded-lg pl-10 pr-4 py-2 focus:ring-teal-500 focus:border-teal-500 border border-gray-700 w-64"
+                                />
+                                <FaSearch className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
+                            </div>
 
-  const dadosGrafico = gerarDadosGrafico(alugueis);
+                            {/* Olá gestor e ícone */}
+                            <div className="flex items-center space-x-3">
+                                <div className="flex flex-col items-end">
+                                    <p className="text-base text-gray-200 font-medium">Olá,</p>
+                                    <p className="text-lg text-white font-extrabold -mt-1">{userName}!</p>
+                                </div>
+                                <FaUserCircle size={40} className="text-gray-400" />
+                            </div>
+                        </div>
+                    </div>
 
-  if (loading) return <p>Carregando...</p>;
+                    {/* Conteúdo da dashboard - grid */}
+                    <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+                        <div className="lg:col-span-2 space-y-8">
+                            {/* Filtros */}
+                            <div className="flex space-x-4 mb-4">
+                                <button className="px-6 py-2 rounded-lg text-white bg-teal-600 font-medium hover:bg-teal-500">
+                                    Todos
+                                </button>
+                                <button className="px-6 py-2 rounded-lg text-gray-400 border border-gray-700 hover:bg-gray-700 font-medium">
+                                    Pagos
+                                </button>
+                                <button className="px-6 py-2 rounded-lg text-gray-400 border border-gray-700 hover:bg-gray-700 font-medium">
+                                    Pendentes
+                                </button>
+                                <button className="px-6 py-2 rounded-lg text-gray-400 border border-gray-700 hover:bg-gray-700 font-medium">
+                                    Vencidos
+                                </button>
+                            </div>
 
-  return (
-    <div className="max-w-4xl mx-auto p-4 sm:p-6">
-      <h1 className="text-3xl font-bold mb-6">Dashboard</h1>
+                            {/* Gráfico */}
+                            <div className="bg-gray-800 p-6 rounded-xl shadow-lg border border-gray-700">
+                                <div className="flex justify-between items-center mb-4">
+                                    <h2 className="text-xl font-semibold text-white">Fluxo de Aluguéis</h2>
+                                    <span className="text-sm text-teal-400 hover:underline cursor-pointer">Ver Todos</span>
+                                </div>
 
-      {/* Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
-        <div className="bg-white p-6 rounded shadow">
-          <h2 className="text-lg font-semibold mb-2">Total de Aluguéis</h2>
-          <p className="text-2xl">{totalAlugueis}</p>
+                                <div style={{ height: '280px' }}>
+                                    <ResponsiveContainer width="100%" height="100%">
+                                        <BarChart data={dadosGrafico} margin={{ top: 10, right: 0, left: 0, bottom: 5 }}>
+                                            <CartesianGrid strokeDasharray="3 3" stroke="#4a5568" vertical={false} />
+                                            <XAxis dataKey="mes" stroke="#9ca3af" axisLine={false} tickLine={false} />
+                                            <YAxis
+                                                tickFormatter={(value) => (value === 0 ? '0k$' : `${(value / 1000).toFixed(1)}k$`)}
+                                                stroke="#9ca3af"
+                                                axisLine={false}
+                                                tickLine={false}
+                                            />
+                                            <Tooltip
+                                                cursor={{ fill: 'rgba(255, 255, 255, 0.1)' }}
+                                                contentStyle={{ backgroundColor: '#1f2937', border: 'none', borderRadius: '8px' }}
+                                                formatter={(value: number) => [formatarMoeda(value), 'Recebido']}
+                                            />
+                                            <Bar dataKey="valor" radius={[6, 6, 0, 0]} barSize={30} fill="#14b8a6" />
+                                        </BarChart>
+                                    </ResponsiveContainer>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div className="space-y-8">
+                            {/* Resumo financeiro */}
+                            <div className="bg-gray-800 rounded-xl shadow-lg border border-gray-700 p-6">
+                                <h3 className="text-lg font-semibold text-white mb-4">Resumo Financeiro</h3>
+
+                                <div className="flex flex-col space-y-4">
+                                    <div className="flex justify-between text-gray-400">
+                                        <span>Total Recebido</span>
+                                        <span className="text-teal-400 font-semibold">{formatarMoeda(totalRecebido)}</span>
+                                    </div>
+                                    <div className="flex justify-between text-gray-400">
+                                        <span>Total Pendente</span>
+                                        <span className="text-red-500 font-semibold">{formatarMoeda(totalPendente)}</span>
+                                    </div>
+                                    <div className="flex justify-between text-gray-400 border-t border-gray-700 pt-4 font-bold text-white">
+                                        <span>Saldo Atual</span>
+                                        <span>{formatarMoeda(totalRecebido - totalPendente)}</span>
+                                    </div>
+                                </div>
+                            </div>
+
+                            {/* Projeção mensal */}
+                            <div className="bg-gray-800 rounded-xl shadow-lg border border-gray-700 p-6">
+                                <h3 className="text-lg font-semibold text-white mb-4">Projeção Mensal</h3>
+
+                                <div className="flex items-center space-x-4">
+                                    <div className="flex-grow bg-gray-700 rounded-full h-6 overflow-hidden">
+                                        <div
+                                            className="bg-teal-500 h-6 rounded-full transition-all duration-500"
+                                            style={{ width: `${porcentagemProjecao}%` }}
+                                        ></div>
+                                    </div>
+                                    <span className="text-teal-400 font-bold">{porcentagemProjecao}%</span>
+                                </div>
+                            </div>
+
+                            {/* Botão Novo Contrato */}
+                            <button
+                                className="w-full flex items-center justify-center space-x-2 py-3 px-4 rounded-lg bg-teal-600 text-white font-semibold hover:bg-teal-500 transition"
+                                onClick={() => alert('Abrir formulário de novo contrato')}
+                            >
+                                <FaPlus size={20} />
+                                <span>Novo Contrato</span>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </main>
         </div>
-
-        <div className="bg-white p-6 rounded shadow">
-          <h2 className="text-lg font-semibold mb-2">Recebido</h2>
-          <p className="text-2xl text-green-600">R$ {totalRecebido.toFixed(2)}</p>
-        </div>
-
-        <div className="bg-white p-6 rounded shadow">
-          <h2 className="text-lg font-semibold mb-2">Pendente</h2>
-          <p className="text-2xl text-red-600">R$ {totalPendente.toFixed(2)}</p>
-        </div>
-      </div>
-
-      {/* Gráfico */}
-      <div className="bg-white p-6 rounded shadow mb-8" style={{ height: '300px', minHeight: '250px' }}>
-        <h2 className="text-lg font-semibold mb-4">Recebimentos nos últimos meses</h2>
-        {dadosGrafico.length === 0 ? (
-          <p className="text-center text-gray-500">Sem dados para mostrar no gráfico.</p>
-        ) : (
-          <ResponsiveContainer width="100%" height="100%">
-            <BarChart data={dadosGrafico} margin={{ top: 5, right: 30, left: 20, bottom: 5 }}>
-              <CartesianGrid strokeDasharray="3 3" />
-              <XAxis dataKey="mes" />
-              <YAxis />
-              <Tooltip formatter={(value: number) => `R$ ${value.toFixed(2)}`} />
-              <Bar dataKey="valor" fill="#3182ce" />
-            </BarChart>
-          </ResponsiveContainer>
-        )}
-      </div>
-
-      {/* Lista de Pendentes */}
-      <div className="bg-white p-6 rounded shadow">
-        <h2 className="text-lg font-semibold mb-4">Aluguéis Pendentes</h2>
-        {alugueis.filter(a => !a.pago).length === 0 ? (
-          <p>Sem alugueis pendentes 🎉</p>
-        ) : (
-          <ul>
-            {alugueis
-              .filter(a => !a.pago)
-              .map((a) => (
-                <li key={a.id} className="mb-2 border-b border-gray-200 pb-2 break-words">
-                  Valor: R$ {a.valor.toFixed(2)} — Vencimento:{' '}
-                  {a.dataVencimento.toDate().toLocaleDateString()}
-                </li>
-              ))}
-          </ul>
-        )}
-      </div>
-    </div>
-  );
+    );
 }
