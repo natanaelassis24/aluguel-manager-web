@@ -13,20 +13,20 @@ import {
 import { signOut } from 'firebase/auth';
 import { auth } from '@/lib/firebase';
 
-const IconNavbar = () => {
+const navItems = [
+  { name: 'Dashboard', icon: <FaHome />, href: '/dashboard' },
+  { name: 'Cards', icon: <FaCreditCard />, href: '/cards' },
+  { name: 'Wallet', icon: <FaWallet />, href: '/wallet' },
+  { name: 'Stats', icon: <FaChartPie />, href: '/stats' },
+];
+
+const bottomItems = [
+  { name: 'Settings', icon: <FaCog />, href: '/settings' },
+];
+
+export default function IconNavbar() {
   const pathname = usePathname();
   const router = useRouter();
-
-  const navItems = [
-    { name: 'Dashboard', icon: <FaHome />, href: '/dashboard' },
-    { name: 'Cards', icon: <FaCreditCard />, href: '/cards' },
-    { name: 'Wallet', icon: <FaWallet />, href: '/wallet' },
-    { name: 'Stats', icon: <FaChartPie />, href: '/stats' },
-  ];
-
-  const bottomItems = [
-    { name: 'Settings', icon: <FaCog />, href: '/settings' },
-  ];
 
   const linkClasses = (href: string) =>
     `flex items-center justify-center p-4 rounded-xl mx-2 transition duration-200 ease-in-out ${
@@ -41,6 +41,7 @@ const IconNavbar = () => {
       router.push('/login');
     } catch (error) {
       console.error('Erro ao fazer logout:', error);
+      alert('Não foi possível deslogar. Tente novamente.');
     }
   };
 
@@ -53,9 +54,9 @@ const IconNavbar = () => {
         </div>
 
         <nav className="flex flex-col gap-4 w-full">
-          {navItems.map((item) => (
-            <Link key={item.name} href={item.href} className={linkClasses(item.href)}>
-              <span className="text-xl">{item.icon}</span>
+          {navItems.map(({ name, href, icon }) => (
+            <Link key={name} href={href} className={linkClasses(href)} aria-label={name} title={name}>
+              <span className="text-xl">{icon}</span>
             </Link>
           ))}
         </nav>
@@ -63,9 +64,9 @@ const IconNavbar = () => {
 
       {/* Bottom Section: Settings + Logout */}
       <div className="flex flex-col items-center gap-4 w-full">
-        {bottomItems.map((item) => (
-          <Link key={item.name} href={item.href} className={linkClasses(item.href)}>
-            <span className="text-xl">{item.icon}</span>
+        {bottomItems.map(({ name, href, icon }) => (
+          <Link key={name} href={href} className={linkClasses(href)} aria-label={name} title={name}>
+            <span className="text-xl">{icon}</span>
           </Link>
         ))}
 
@@ -80,6 +81,4 @@ const IconNavbar = () => {
       </div>
     </aside>
   );
-};
-
-export default IconNavbar;
+}

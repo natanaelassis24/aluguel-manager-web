@@ -4,13 +4,12 @@ import { useState, useEffect } from 'react';
 import { usePathname } from 'next/navigation';
 import { onAuthStateChanged, User } from 'firebase/auth';
 import { auth } from '@/lib/firebase';
-import Cydebar from './components/Cydebar';
+import IconNavbar from './components/Cydebar';
 
 export default function SidebarWrapper({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
   const [user, setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
-  const [isSidebarOpen, setIsSidebarOpen] = useState(false);
 
   const publicPaths = ['/login', '/cadastro'];
 
@@ -37,13 +36,11 @@ export default function SidebarWrapper({ children }: { children: React.ReactNode
 
   return (
     <div className="flex w-full min-h-screen transition-all duration-300 ease-in-out">
-      {showSidebar && (
-        <Cydebar isOpen={isSidebarOpen} setIsOpen={setIsSidebarOpen} />
-      )}
+      {showSidebar && <IconNavbar />}
 
       <main
         className={`transition-all duration-300 ease-in-out flex-1 p-6 overflow-auto ${
-          showSidebar && isSidebarOpen ? 'pl-64' : 'pl-16'
+          showSidebar ? 'pl-20' : 'pl-6'
         }`}
       >
         {children}
