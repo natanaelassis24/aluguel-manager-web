@@ -1,5 +1,6 @@
 'use client';
 
+import Image from 'next/image'; // Importa Image do Next.js
 import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
 import {
@@ -46,16 +47,31 @@ export default function IconNavbar() {
   };
 
   return (
-    <aside className="fixed top-0 left-0 h-screen w-20 bg-gray-900 border-r border-gray-800 flex flex-col justify-between items-center py-4 z-50">
+    <aside className="fixed top-0 left-0 h-screen w-20 bg-gray-900 border-r border-gray-800 flex flex-col justify-between items-center py-6 z-50">
       {/* Top Section */}
       <div className="flex flex-col items-center space-y-8">
-        <div className="p-2 bg-teal-600 rounded-full">
-          <span className="text-white font-bold text-lg">N</span>
+        {/* Logo */}
+        <div className="w-[60px] h-[60px] rounded-full overflow-hidden flex items-center justify-center">
+          <Image
+            src="/logo.png"
+            alt="Logo"
+            width={60}
+            height={60}
+            className="object-contain"
+            priority
+          />
         </div>
 
+        {/* Navegação */}
         <nav className="flex flex-col gap-4 w-full">
           {navItems.map(({ name, href, icon }) => (
-            <Link key={name} href={href} className={linkClasses(href)} aria-label={name} title={name}>
+            <Link
+              key={name}
+              href={href}
+              className={linkClasses(href)}
+              aria-label={name}
+              title={name}
+            >
               <span className="text-xl">{icon}</span>
             </Link>
           ))}
@@ -65,7 +81,13 @@ export default function IconNavbar() {
       {/* Bottom Section: Settings + Logout */}
       <div className="flex flex-col items-center gap-4 w-full">
         {bottomItems.map(({ name, href, icon }) => (
-          <Link key={name} href={href} className={linkClasses(href)} aria-label={name} title={name}>
+          <Link
+            key={name}
+            href={href}
+            className={linkClasses(href)}
+            aria-label={name}
+            title={name}
+          >
             <span className="text-xl">{icon}</span>
           </Link>
         ))}
