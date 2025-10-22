@@ -1,183 +1,296 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import { onAuthStateChanged } from 'firebase/auth';
-import { auth } from '@/lib/firebase';
-import { Timestamp } from 'firebase/firestore';
-import { FaPlus, FaSearch, FaUserCircle } from 'react-icons/fa';
+import { useRouter, usePathname } from 'next/navigation';
+// Firebase
+import { onAuthStateChanged, signOut } from 'firebase/auth';
+import { auth, firestore } from '@/lib/firebase';
+import { collection, query, getDocs, Timestamp } from 'firebase/firestore';
+// Gráfico e ícones
 import {
-  ResponsiveContainer, BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip
+    BarChart,
+    Bar,
+    XAxis,
+    YAxis,
+    CartesianGrid,
+    Tooltip,
+    ResponsiveContainer,
 } from 'recharts';
+import { FaPlus, FaSearch, FaUserCircle, FaHome, FaCreditCard, FaWallet, FaChartPie, FaCog, FaSignOutAlt } from 'react-icons/fa';
+import Link from 'next/link';
 
+// Tipagem do aluguel
 interface Aluguel {
-  id: string;
-  valor: number;
-  pago: boolean;
-  dataVencimento: Timestamp;
+    id: string;
+    valor: number;
+    pago: boolean;
+    dataVencimento: Timestamp;
 }
 
-const formatarMoeda = (valor: number) =>
-  `R$ ${valor.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}`;
-
+// Funções utilitárias
+const formatarMoeda = (valor: number) => `R$ ${valor.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}`;
 function calcularTotalRecebido(alugueis: Aluguel[]) {
-  return alugueis.filter(a => a.pago).reduce((acc, a) => acc + a.valor, 0);
+    return alugueis.filter(a => a.pago).reduce((acc, a) => acc + a.valor, 0);
 }
-
 function calcularTotalPendente(alugueis: Aluguel[]) {
-  return alugueis.filter(a => !a.pago).reduce((acc, a) => acc + a.valor, 0);
+    return alugueis.filter(a => !a.pago).reduce((acc, a) => acc + a.valor, 0);
+}
+function gerarDadosGrafico(alugueis: Aluguel[]) {
+    const meses = ['Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug'];
+    return meses.map((mes) => ({ mes, valor: 0 }));
 }
 
-function gerarDadosGrafico(alugueis: Aluguel[]) {
-  const meses = ['Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug'];
-  return meses.map((mes) => ({ mes, valor: 0 }));
-}
+const navItems = [
+    { name: 'Dashboard', icon: <FaHome />, href: '/dashboard' },
+    { name: 'Cards', icon: <FaCreditCard />, href: '/cards' },
+    { name: 'Wallet', icon: <FaWallet />, href: '/wallet' },
+    { name: 'Stats', icon: <FaChartPie />, href: '/stats' },
+];
+
+const bottomItems = [
+    { name: 'Settings', icon: <FaCog />, href: '/settings' },
+];
 
 export default function DashboardPage() {
-  const [loading, setLoading] = useState(true);
-  const [alugueis, setAlugueis] = useState<Aluguel[]>([]);
-  const [userName, setUserName] = useState<string>('Gestor');
+    const router = useRouter();
+    const pathname = usePathname();
+    const [loading, setLoading] = useState(true);
+    const [alugueis, setAlugueis] = useState<Aluguel[]>([]);
+    const [userName, setUserName] = useState<string>('Gestor');
 
-  async function carregarDados(userId: string) {
-    setLoading(true);
-    try {
-      setUserName('Gestor');
-      setAlugueis([]); // Aqui você carrega os dados reais depois
-    } catch (error) {
-      console.error('Erro ao carregar dados:', error);
-    } finally {
-      setLoading(false);
+    async function carregarDados(userId: string) {
+        setLoading(true);
+        try {
+            // Aqui você pode implementar a chamada real ao Firestore para pegar os alugueis do userId
+            setUserName('Gestor');
+            setAlugueis([]);
+            setLoading(false);
+        } catch (error) {
+            console.error('Erro ao carregar dados:', error);
+            setUserName('Gestor');
+            setAlugueis([]);
+            setLoading(false);
+        }
     }
-  }
 
-  useEffect(() => {
-    const unsubscribe = onAuthStateChanged(auth, (user) => {
-      if (user) {
-        carregarDados(user.uid);
-      } else {
-        setUserName('Visitante');
-        setAlugueis([]);
-        setLoading(false);
-      }
-    });
+    useEffect(() => {
+        const unsubscribe = onAuthStateChanged(auth, (user) => {
+            if (!user) {
+                setLoading(false);
+                setAlugueis([]);
+                setUserName('Visitante');
+            } else {
+                carregarDados(user.uid || 'placeholder');
+            }
+        });
 
-    return () => unsubscribe();
-  }, []);
+        return () => unsubscribe();
+    }, [router]);
 
-  const totalRecebido = calcularTotalRecebido(alugueis);
-  const totalPendente = calcularTotalPendente(alugueis);
-  const dadosGrafico = gerarDadosGrafico(alugueis);
-  const porcentagemProjecao = 0;
+    const totalRecebido = calcularTotalRecebido(alugueis);
+    const totalPendente = calcularTotalPendente(alugueis);
+    const dadosGrafico = gerarDadosGrafico(alugueis);
+    const porcentagemProjecao = 0;
 
-  if (loading) {
+    const linkClasses = (href: string) =>
+        `flex items-center justify-center p-3 rounded-xl mx-2 transition duration-200 ease-in-out ${
+            pathname === href
+                ? 'bg-teal-700/50 text-white'
+                : 'text-gray-400 hover:bg-gray-800 hover:text-white'
+        }`;
+
+    const handleLogout = async () => {
+        try {
+            await signOut(auth);
+            router.push('/login');
+        } catch (error) {
+            console.error('Erro ao deslogar:', error);
+            alert('Não foi possível deslogar. Tente novamente.');
+        }
+    };
+
+    if (loading) {
+        return (
+            <div className="text-white bg-gray-900 min-h-screen flex items-center justify-center">
+                <p className="text-xl">Carregando Dashboard...</p>
+            </div>
+        );
+    }
+
     return (
-      <div className="text-white bg-gray-900 min-h-screen flex items-center justify-center">
-        <p className="text-xl">Carregando Dashboard...</p>
-      </div>
+        <div className="flex min-h-screen bg-gray-900 text-gray-100">
+            {/* Sidebar */}
+            <aside className="fixed top-0 left-0 h-screen w-20 bg-gray-900 border-r border-gray-800 flex flex-col justify-between items-center py-4 z-50">
+                {/* Logo */}
+                <div className="flex flex-col items-center space-y-8">
+                    <div className="p-2 bg-teal-600 rounded-full">
+                        <span className="text-white font-bold text-lg">N</span>
+                    </div>
+                    {/* Navegação */}
+                    <nav className="flex flex-col gap-4 w-full pt-4">
+                        {navItems.map((item) => (
+                            <Link
+                                key={item.name}
+                                href={item.href}
+                                className={`flex items-center justify-center p-3 rounded-xl mx-2 transition duration-200 ease-in-out ${
+                                    pathname === item.href
+                                        ? 'bg-white text-gray-900 shadow-md'
+                                        : 'text-gray-400 hover:bg-gray-800 hover:text-white'
+                                }`}
+                            >
+                                <span className="text-xl">{item.icon}</span>
+                            </Link>
+                        ))}
+                    </nav>
+                </div>
+
+                {/* Configurações e logout */}
+                <div className="flex flex-col items-center gap-4 w-full">
+                    {bottomItems.map((item) => (
+                        <Link
+                            key={item.name}
+                            href={item.href}
+                            className="flex items-center justify-center p-3 rounded-xl mx-2 transition duration-200 ease-in-out text-gray-400 hover:bg-gray-800 hover:text-white"
+                        >
+                            <span className="text-xl">{item.icon}</span>
+                        </Link>
+                    ))}
+
+                    <button
+                        onClick={handleLogout}
+                        className="flex items-center justify-center p-3 rounded-xl mx-2 text-red-400 hover:bg-gray-800 hover:text-red-300 transition"
+                        aria-label="Sair"
+                    >
+                        <FaSignOutAlt size={20} />
+                    </button>
+                </div>
+            </aside>
+
+            <main className="flex-1 pl-20 p-4 sm:p-8">
+                <div className="max-w-7xl mx-auto">
+                    {/* Header */}
+                    <div className="flex justify-between items-center mb-8 pt-4">
+                        <h1 className="text-3xl font-bold text-white">Dashboard de Aluguéis</h1>
+
+                        <div className="flex items-center space-x-6">
+                            {/* Search */}
+                            <div className="relative hidden sm:block">
+                                <input
+                                    type="text"
+                                    placeholder="Buscar Contrato/Locatário"
+                                    className="bg-gray-800 text-gray-300 rounded-lg pl-10 pr-4 py-2 focus:ring-teal-500 focus:border-teal-500 border border-gray-700 w-64"
+                                />
+                                <FaSearch className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
+                            </div>
+
+                            {/* Olá gestor e ícone */}
+                            <div className="flex items-center space-x-3">
+                                <div className="flex flex-col items-end">
+                                    <p className="text-base text-gray-200 font-medium">Olá,</p>
+                                    <p className="text-lg text-white font-extrabold -mt-1">{userName}!</p>
+                                </div>
+                                <FaUserCircle size={40} className="text-gray-400" />
+                            </div>
+                        </div>
+                    </div>
+
+                    {/* Conteúdo da dashboard - grid */}
+                    <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+                        <div className="lg:col-span-2 space-y-8">
+                            {/* Filtros */}
+                            <div className="flex space-x-4 mb-4">
+                                <button className="px-6 py-2 rounded-lg text-white bg-teal-600 font-medium hover:bg-teal-500">
+                                    Todos
+                                </button>
+                                <button className="px-6 py-2 rounded-lg text-gray-400 border border-gray-700 hover:bg-gray-700 font-medium">
+                                    Pagos
+                                </button>
+                                <button className="px-6 py-2 rounded-lg text-gray-400 border border-gray-700 hover:bg-gray-700 font-medium">
+                                    Pendentes
+                                </button>
+                                <button className="px-6 py-2 rounded-lg text-gray-400 border border-gray-700 hover:bg-gray-700 font-medium">
+                                    Vencidos
+                                </button>
+                            </div>
+
+                            {/* Gráfico */}
+                            <div className="bg-gray-800 p-6 rounded-xl shadow-lg border border-gray-700">
+                                <div className="flex justify-between items-center mb-4">
+                                    <h2 className="text-xl font-semibold text-white">Fluxo de Aluguéis</h2>
+                                    <span className="text-sm text-teal-400 hover:underline cursor-pointer">Ver Todos</span>
+                                </div>
+
+                                <div style={{ height: '280px' }}>
+                                    <ResponsiveContainer width="100%" height="100%">
+                                        <BarChart data={dadosGrafico} margin={{ top: 10, right: 0, left: 0, bottom: 5 }}>
+                                            <CartesianGrid strokeDasharray="3 3" stroke="#4a5568" vertical={false} />
+                                            <XAxis dataKey="mes" stroke="#9ca3af" axisLine={false} tickLine={false} />
+                                            <YAxis
+                                                tickFormatter={(value) => (value === 0 ? '0k$' : `${(value / 1000).toFixed(1)}k$`)}
+                                                stroke="#9ca3af"
+                                                axisLine={false}
+                                                tickLine={false}
+                                            />
+                                            <Tooltip
+                                                cursor={{ fill: 'rgba(255, 255, 255, 0.1)' }}
+                                                contentStyle={{ backgroundColor: '#1f2937', border: 'none', borderRadius: '8px' }}
+                                                formatter={(value: number) => [formatarMoeda(value), 'Recebido']}
+                                            />
+                                            <Bar dataKey="valor" radius={[6, 6, 0, 0]} barSize={30} fill="#14b8a6" />
+                                        </BarChart>
+                                    </ResponsiveContainer>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div className="space-y-8">
+                            {/* Resumo financeiro */}
+                            <div className="bg-gray-800 rounded-xl shadow-lg border border-gray-700 p-6">
+                                <h3 className="text-lg font-semibold text-white mb-4">Resumo Financeiro</h3>
+
+                                <div className="flex flex-col space-y-4">
+                                    <div className="flex justify-between text-gray-400">
+                                        <span>Total Recebido</span>
+                                        <span className="text-teal-400 font-semibold">{formatarMoeda(totalRecebido)}</span>
+                                    </div>
+                                    <div className="flex justify-between text-gray-400">
+                                        <span>Total Pendente</span>
+                                        <span className="text-red-500 font-semibold">{formatarMoeda(totalPendente)}</span>
+                                    </div>
+                                    <div className="flex justify-between text-gray-400 border-t border-gray-700 pt-4 font-bold text-white">
+                                        <span>Saldo Atual</span>
+                                        <span>{formatarMoeda(totalRecebido - totalPendente)}</span>
+                                    </div>
+                                </div>
+                            </div>
+
+                            {/* Projeção mensal */}
+                            <div className="bg-gray-800 rounded-xl shadow-lg border border-gray-700 p-6">
+                                <h3 className="text-lg font-semibold text-white mb-4">Projeção Mensal</h3>
+
+                                <div className="flex items-center space-x-4">
+                                    <div className="flex-grow bg-gray-700 rounded-full h-6 overflow-hidden">
+                                        <div
+                                            className="bg-teal-500 h-6 rounded-full transition-all duration-500"
+                                            style={{ width: `${porcentagemProjecao}%` }}
+                                        ></div>
+                                    </div>
+                                    <span className="text-teal-400 font-bold">{porcentagemProjecao}%</span>
+                                </div>
+                            </div>
+
+                            {/* Botão Novo Contrato */}
+                            <button
+                                className="w-full flex items-center justify-center space-x-2 py-3 px-4 rounded-lg bg-teal-600 text-white font-semibold hover:bg-teal-500 transition"
+                                onClick={() => alert('Abrir formulário de novo contrato')}
+                            >
+                                <FaPlus size={20} />
+                                <span>Novo Contrato</span>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </main>
+        </div>
     );
-  }
-
-  return (
-    <div className="max-w-7xl mx-auto pt-4">
-      {/* Header */}
-      <div className="flex justify-between items-center mb-8">
-        <h1 className="text-3xl font-bold text-white">Dashboard de Aluguéis</h1>
-
-        <div className="flex items-center space-x-6">
-          {/* Busca */}
-          <div className="relative hidden sm:block">
-            <input
-              type="text"
-              placeholder="Buscar Contrato/Locatário"
-              className="bg-gray-800 text-gray-300 rounded-lg pl-10 pr-4 py-2 border border-gray-700 w-64"
-            />
-            <FaSearch className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
-          </div>
-
-          {/* Nome do usuário */}
-          <div className="flex items-center space-x-3">
-            <div className="flex flex-col items-end">
-              <p className="text-base text-gray-200 font-medium">Olá,</p>
-              <p className="text-lg text-white font-extrabold -mt-1">{userName}!</p>
-            </div>
-            <FaUserCircle size={40} className="text-gray-400" />
-          </div>
-        </div>
-      </div>
-
-      {/* Conteúdo principal */}
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-        <div className="lg:col-span-2 space-y-8">
-          {/* Gráfico */}
-          <div className="bg-gray-800 p-6 rounded-xl shadow-lg border border-gray-700">
-            <div className="flex justify-between items-center mb-4">
-              <h2 className="text-xl font-semibold text-white">Fluxo de Aluguéis</h2>
-              <span className="text-sm text-teal-400 hover:underline cursor-pointer">Ver Todos</span>
-            </div>
-            <div style={{ height: '280px' }}>
-              <ResponsiveContainer width="100%" height="100%">
-                <BarChart data={dadosGrafico}>
-                  <CartesianGrid strokeDasharray="3 3" stroke="#4a5568" vertical={false} />
-                  <XAxis dataKey="mes" stroke="#9ca3af" />
-                  <YAxis
-                    tickFormatter={(v) => (v === 0 ? '0k$' : `${(v / 1000).toFixed(1)}k$`)}
-                    stroke="#9ca3af"
-                  />
-                  <Tooltip
-                    contentStyle={{ backgroundColor: '#1f2937', borderRadius: '8px', border: 'none' }}
-                    formatter={(value: number) => [formatarMoeda(value), 'Recebido']}
-                  />
-                  <Bar dataKey="valor" fill="#14b8a6" radius={[6, 6, 0, 0]} barSize={30} />
-                </BarChart>
-              </ResponsiveContainer>
-            </div>
-          </div>
-        </div>
-
-        {/* Resumo lateral */}
-        <div className="space-y-8">
-          {/* Resumo financeiro */}
-          <div className="bg-gray-800 rounded-xl shadow-lg border border-gray-700 p-6">
-            <h3 className="text-lg font-semibold text-white mb-4">Resumo Financeiro</h3>
-            <div className="flex flex-col space-y-4">
-              <div className="flex justify-between text-gray-400">
-                <span>Total Recebido</span>
-                <span className="text-teal-400 font-semibold">{formatarMoeda(totalRecebido)}</span>
-              </div>
-              <div className="flex justify-between text-gray-400">
-                <span>Total Pendente</span>
-                <span className="text-red-500 font-semibold">{formatarMoeda(totalPendente)}</span>
-              </div>
-              <div className="flex justify-between text-gray-400 border-t border-gray-700 pt-4 font-bold text-white">
-                <span>Saldo Atual</span>
-                <span>{formatarMoeda(totalRecebido - totalPendente)}</span>
-              </div>
-            </div>
-          </div>
-
-          {/* Projeção */}
-          <div className="bg-gray-800 rounded-xl shadow-lg border border-gray-700 p-6">
-            <h3 className="text-lg font-semibold text-white mb-4">Projeção Mensal</h3>
-            <div className="flex items-center space-x-4">
-              <div className="flex-grow bg-gray-700 rounded-full h-6 overflow-hidden">
-                <div
-                  className="bg-teal-500 h-6 rounded-full transition-all duration-500"
-                  style={{ width: `${porcentagemProjecao}%` }}
-                ></div>
-              </div>
-              <span className="text-teal-400 font-bold">{porcentagemProjecao}%</span>
-            </div>
-          </div>
-
-          {/* Botão novo contrato */}
-          <button
-            className="w-full flex items-center justify-center space-x-2 py-3 px-4 rounded-lg bg-teal-600 text-white font-semibold hover:bg-teal-500 transition"
-            onClick={() => alert('Abrir formulário de novo contrato')}
-          >
-            <FaPlus size={20} />
-            <span>Novo Contrato</span>
-          </button>
-        </div>
-      </div>
-    </div>
-  );
 }
