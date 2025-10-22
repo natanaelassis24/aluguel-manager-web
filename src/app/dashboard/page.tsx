@@ -1,7 +1,7 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import { useRouter } from 'next/navigation';
+import { useRouter, usePathname } from 'next/navigation';
 // Firebase
 import { onAuthStateChanged, signOut } from 'firebase/auth';
 import { auth, firestore } from '@/lib/firebase';
@@ -40,79 +40,20 @@ function gerarDadosGrafico(alugueis: Aluguel[]) {
     return meses.map((mes) => ({ mes, valor: 0 }));
 }
 
-// Sidebar com botão de sair incluído
-const IconNavbar = () => {
-    const router = useRouter();
+const navItems = [
+    { name: 'Dashboard', icon: <FaHome />, href: '/dashboard' },
+    { name: 'Cards', icon: <FaCreditCard />, href: '/cards' },
+    { name: 'Wallet', icon: <FaWallet />, href: '/wallet' },
+    { name: 'Stats', icon: <FaChartPie />, href: '/stats' },
+];
 
-    const handleLogout = async () => {
-        try {
-            await signOut(auth);
-            router.push('/login');
-        } catch (error) {
-            console.error('Erro ao deslogar:', error);
-            alert('Não foi possível deslogar. Tente novamente.');
-        }
-    };
-
-    const pathname = '/dashboard';
-    const navItems = [
-        { name: 'Dashboard', icon: <FaHome />, href: '/dashboard' },
-        { name: 'Cards', icon: <FaCreditCard />, href: '/cards' },
-        { name: 'Wallet', icon: <FaWallet />, href: '/wallet' },
-        { name: 'Stats', icon: <FaChartPie />, href: '/stats' },
-    ];
-
-    return (
-        <aside className="fixed top-0 left-0 h-screen w-20 bg-gray-900 border-r border-gray-800 flex flex-col justify-between items-center py-4 z-50">
-            <div className="flex flex-col items-center space-y-8">
-                {/* Logo N */}
-                <div className="flex items-center space-x-2 p-2 pt-0">
-                    <div className="p-2 bg-teal-600 rounded-full">
-                        <span className="text-white font-bold text-lg">N</span>
-                    </div>
-                </div>
-
-                {/* Navegação */}
-                <nav className="flex flex-col gap-4 w-full pt-4">
-                    {navItems.map((item) => (
-                        <Link
-                            key={item.name}
-                            href={item.href}
-                            className={`flex items-center justify-center p-3 rounded-xl mx-2 transition duration-200 ease-in-out ${
-                                pathname === item.href
-                                    ? 'bg-white text-gray-900 shadow-md'
-                                    : 'text-gray-400 hover:bg-gray-800 hover:text-white'
-                            }`}
-                        >
-                            <span className="text-xl">{item.icon}</span>
-                        </Link>
-                    ))}
-                </nav>
-            </div>
-
-            {/* Configurações e logout */}
-            <div className="flex flex-col items-center gap-4 w-full">
-                <Link
-                    href="/settings"
-                    className="flex items-center justify-center p-3 rounded-xl mx-2 transition duration-200 ease-in-out text-gray-400 hover:bg-gray-800 hover:text-white"
-                >
-                    <FaCog size={20} />
-                </Link>
-
-                <button
-                    onClick={handleLogout}
-                    className="flex items-center justify-center p-3 rounded-xl mx-2 text-red-400 hover:bg-gray-800 hover:text-red-300 transition"
-                    aria-label="Sair"
-                >
-                    <FaSignOutAlt size={20} />
-                </button>
-            </div>
-        </aside>
-    );
-};
+const bottomItems = [
+    { name: 'Settings', icon: <FaCog />, href: '/settings' },
+];
 
 export default function DashboardPage() {
     const router = useRouter();
+    const pathname = usePathname();
     const [loading, setLoading] = useState(true);
     const [alugueis, setAlugueis] = useState<Aluguel[]>([]);
     const [userName, setUserName] = useState<string>('Gestor');
@@ -120,6 +61,7 @@ export default function DashboardPage() {
     async function carregarDados(userId: string) {
         setLoading(true);
         try {
+            // Aqui você pode implementar a chamada real ao Firestore para pegar os alugueis do userId
             setUserName('Gestor');
             setAlugueis([]);
             setLoading(false);
@@ -150,6 +92,23 @@ export default function DashboardPage() {
     const dadosGrafico = gerarDadosGrafico(alugueis);
     const porcentagemProjecao = 0;
 
+    const linkClasses = (href: string) =>
+        `flex items-center justify-center p-3 rounded-xl mx-2 transition duration-200 ease-in-out ${
+            pathname === href
+                ? 'bg-teal-700/50 text-white'
+                : 'text-gray-400 hover:bg-gray-800 hover:text-white'
+        }`;
+
+    const handleLogout = async () => {
+        try {
+            await signOut(auth);
+            router.push('/login');
+        } catch (error) {
+            console.error('Erro ao deslogar:', error);
+            alert('Não foi possível deslogar. Tente novamente.');
+        }
+    };
+
     if (loading) {
         return (
             <div className="text-white bg-gray-900 min-h-screen flex items-center justify-center">
@@ -160,7 +119,52 @@ export default function DashboardPage() {
 
     return (
         <div className="flex min-h-screen bg-gray-900 text-gray-100">
-            <IconNavbar />
+            {/* Sidebar */}
+            <aside className="fixed top-0 left-0 h-screen w-20 bg-gray-900 border-r border-gray-800 flex flex-col justify-between items-center py-4 z-50">
+                {/* Logo */}
+                <div className="flex flex-col items-center space-y-8">
+                    <div className="p-2 bg-teal-600 rounded-full">
+                        <span className="text-white font-bold text-lg">N</span>
+                    </div>
+                    {/* Navegação */}
+                    <nav className="flex flex-col gap-4 w-full pt-4">
+                        {navItems.map((item) => (
+                            <Link
+                                key={item.name}
+                                href={item.href}
+                                className={`flex items-center justify-center p-3 rounded-xl mx-2 transition duration-200 ease-in-out ${
+                                    pathname === item.href
+                                        ? 'bg-white text-gray-900 shadow-md'
+                                        : 'text-gray-400 hover:bg-gray-800 hover:text-white'
+                                }`}
+                            >
+                                <span className="text-xl">{item.icon}</span>
+                            </Link>
+                        ))}
+                    </nav>
+                </div>
+
+                {/* Configurações e logout */}
+                <div className="flex flex-col items-center gap-4 w-full">
+                    {bottomItems.map((item) => (
+                        <Link
+                            key={item.name}
+                            href={item.href}
+                            className="flex items-center justify-center p-3 rounded-xl mx-2 transition duration-200 ease-in-out text-gray-400 hover:bg-gray-800 hover:text-white"
+                        >
+                            <span className="text-xl">{item.icon}</span>
+                        </Link>
+                    ))}
+
+                    <button
+                        onClick={handleLogout}
+                        className="flex items-center justify-center p-3 rounded-xl mx-2 text-red-400 hover:bg-gray-800 hover:text-red-300 transition"
+                        aria-label="Sair"
+                    >
+                        <FaSignOutAlt size={20} />
+                    </button>
+                </div>
+            </aside>
 
             <main className="flex-1 pl-20 p-4 sm:p-8">
                 <div className="max-w-7xl mx-auto">
