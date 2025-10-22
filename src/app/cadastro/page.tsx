@@ -6,15 +6,30 @@ import { auth } from '@/lib/firebase';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 
+// Firestore
+import { getFirestore, doc, setDoc } from 'firebase/firestore';
+
 export default function CadastroPage() {
   const router = useRouter();
+  const db = getFirestore();
+
+  const [nome, setNome] = useState('');
   const [email, setEmail] = useState('');
   const [senha, setSenha] = useState('');
   const [erro, setErro] = useState('');
 
   const cadastrar = async () => {
     try {
-      await createUserWithEmailAndPassword(auth, email, senha);
+      const userCred = await createUserWithEmailAndPassword(auth, email, senha);
+      const user = userCred.user;
+
+      // Salva dados do usuário no Firestore
+      await setDoc(doc(db, 'usuarios', user.uid), {
+        nome,
+        email,
+        criadoEm: new Date(),
+      });
+
       router.push('/login');
     } catch (e: any) {
       console.error('Erro no cadastro:', e);
@@ -26,6 +41,15 @@ export default function CadastroPage() {
     <div style={{ maxWidth: 400, margin: 'auto', padding: 20 }}>
       <h1>Cadastro</h1>
       {erro && <p style={{ color: 'red' }}>{erro}</p>}
+
+      <input
+        type="text"
+        placeholder="Nome de usuário"
+        value={nome}
+        onChange={(e) => setNome(e.target.value)}
+        style={{ width: '100%', marginBottom: 10, padding: 8 }}
+      />
+
       <input
         type="email"
         placeholder="E-mail"
@@ -33,6 +57,7 @@ export default function CadastroPage() {
         onChange={(e) => setEmail(e.target.value)}
         style={{ width: '100%', marginBottom: 10, padding: 8 }}
       />
+
       <input
         type="password"
         placeholder="Senha"
@@ -40,6 +65,7 @@ export default function CadastroPage() {
         onChange={(e) => setSenha(e.target.value)}
         style={{ width: '100%', marginBottom: 10, padding: 8 }}
       />
+
       <button onClick={cadastrar} style={{ width: '100%', padding: 10 }}>
         Cadastrar
       </button>

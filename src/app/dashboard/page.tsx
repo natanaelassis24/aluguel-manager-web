@@ -3,8 +3,10 @@
 import { useEffect, useState } from 'react';
 import { useRouter, usePathname } from 'next/navigation';
 // Firebase
-import { onAuthStateChanged, signOut } from 'firebase/auth';
+import { onAuthStateChanged } from 'firebase/auth';
 import { auth } from '@/lib/firebase';
+// Firestore
+import { getFirestore, doc, getDoc } from 'firebase/firestore';
 // Gráfico e ícones
 import {
     BarChart,
@@ -48,14 +50,26 @@ export default function DashboardPage() {
 
     async function carregarDados(userId: string) {
         setLoading(true);
+        const db = getFirestore();
+
         try {
-            setUserName('Gestor');
+            // Buscar o nome do usuário no Firestore
+            const userDoc = await getDoc(doc(db, 'usuarios', userId));
+            
+            if (userDoc.exists()) {
+                const dados = userDoc.data();
+                setUserName(dados.nome || 'Gestor'); // Nome salvo ou fallback
+            } else {
+                setUserName('Gestor');
+            }
+
+            // Aqui você pode buscar os aluguéis do usuário no futuro
             setAlugueis([]);
-            setLoading(false);
         } catch (error) {
             console.error('Erro ao carregar dados:', error);
             setUserName('Gestor');
             setAlugueis([]);
+        } finally {
             setLoading(false);
         }
     }
@@ -78,8 +92,6 @@ export default function DashboardPage() {
     const totalPendente = calcularTotalPendente(alugueis);
     const dadosGrafico = gerarDadosGrafico(alugueis);
     const porcentagemProjecao = 0;
-
-    // Removi a função handleLogout pois o botão foi removido
 
     if (loading) {
         return (
