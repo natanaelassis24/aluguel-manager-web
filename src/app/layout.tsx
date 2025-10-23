@@ -1,5 +1,6 @@
 import './globals.css';
 import SidebarWrapper from './SidebarWrapper';
+import { UserProvider } from '@/context/UserContext';
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
@@ -13,7 +14,9 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         <meta name="apple-mobile-web-app-capable" content="yes" />
       </head>
       <body className="flex bg-gray-50 min-h-screen">
-        <SidebarWrapper>{children}</SidebarWrapper>
+        <UserProvider>
+          <SidebarWrapper>{children}</SidebarWrapper>
+        </UserProvider>
       </body>
     </html>
   );

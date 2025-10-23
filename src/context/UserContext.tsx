@@ -10,7 +10,6 @@ interface UserData {
   uid: string;
   nome: string;
   tipo: string;
-  token: string; // se usar token, senão pode omitir
 }
 
 interface UserContextType {
@@ -38,14 +37,12 @@ export function UserProvider({ children }: { children: ReactNode }) {
       if (currentUser) {
         const db = getFirestore();
         const userDoc = await getDoc(doc(db, 'usuarios', currentUser.uid));
-
         if (userDoc.exists()) {
           const data = userDoc.data();
           setUserData({
             uid: currentUser.uid,
             nome: data.nome || '',
             tipo: data.tipo || '',
-            token: data.token || '', // só se tiver token armazenado
           });
         } else {
           setUserData(null);
@@ -53,7 +50,6 @@ export function UserProvider({ children }: { children: ReactNode }) {
       } else {
         setUserData(null);
       }
-
       setLoading(false);
     });
 

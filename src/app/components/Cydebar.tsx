@@ -1,6 +1,6 @@
 'use client';
 
-import Image from 'next/image'; // Importa Image do Next.js
+import Image from 'next/image'; 
 import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
 import {
@@ -14,18 +14,13 @@ import {
 import { signOut } from 'firebase/auth';
 import { auth } from '@/lib/firebase';
 
-const navItems = [
-  { name: 'Dashboard', icon: <FaHome />, href: '/dashboard' },
-  { name: 'Cards', icon: <FaCreditCard />, href: '/cards' },
-  { name: 'Wallet', icon: <FaWallet />, href: '/wallet' },
-  { name: 'Stats', icon: <FaChartPie />, href: '/stats' },
-];
+type UserType = 'locador' | 'locatario';
 
-const bottomItems = [
-  { name: 'Settings', icon: <FaCog />, href: '/settings' },
-];
+type IconNavbarProps = {
+  userType: UserType;
+};
 
-export default function IconNavbar() {
+export default function IconNavbar({ userType }: IconNavbarProps) {
   const pathname = usePathname();
   const router = useRouter();
 
@@ -45,6 +40,26 @@ export default function IconNavbar() {
       alert('Não foi possível deslogar. Tente novamente.');
     }
   };
+
+  // Itens para locador (mostrar tudo)
+  const navItemsLocador = [
+    { name: 'Dashboard', icon: <FaHome />, href: '/dashboard' },
+    { name: 'Cards', icon: <FaCreditCard />, href: '/cards' },
+    { name: 'Wallet', icon: <FaWallet />, href: '/wallet' },
+    { name: 'Stats', icon: <FaChartPie />, href: '/stats' },
+  ];
+
+  // Itens para locatário (mostrar só Cards e Wallet)
+  const navItemsLocatario = [
+    { name: 'Cards', icon: <FaCreditCard />, href: '/cards' },
+    { name: 'Wallet', icon: <FaWallet />, href: '/wallet' },
+  ];
+
+  const navItems = userType === 'locador' ? navItemsLocador : navItemsLocatario;
+
+  const bottomItems = [
+    { name: 'Settings', icon: <FaCog />, href: '/settings' },
+  ];
 
   return (
     <aside className="fixed top-0 left-0 h-screen w-20 bg-gray-900 border-r border-gray-800 flex flex-col justify-between items-center py-6 z-50">
