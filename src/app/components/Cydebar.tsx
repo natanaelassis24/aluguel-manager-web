@@ -48,8 +48,9 @@ export default function IconNavbar({ userType }: IconNavbarProps) {
     { name: 'Stats', icon: <FaChartPie />, href: '/stats' },
   ];
 
-  // Itens para locatário (mostrar Cards e Wallet)
+  // Itens para locatário (incluir Home, Cards e Wallet)
   const navItemsLocatario = [
+    { name: 'Home', icon: <FaHome />, href: '/locatario' },  // Botão Home para locatário
     { name: 'Cards', icon: <FaCreditCard />, href: '/cards' },
     { name: 'Wallet', icon: <FaWallet />, href: '/wallet' },
   ];
