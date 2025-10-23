@@ -41,15 +41,14 @@ export default function IconNavbar({ userType }: IconNavbarProps) {
     }
   };
 
-  // Itens para locador (mostrar tudo)
+  // Itens para locador (removendo 'Cards')
   const navItemsLocador = [
     { name: 'Dashboard', icon: <FaHome />, href: '/dashboard' },
-    { name: 'Cards', icon: <FaCreditCard />, href: '/cards' },
     { name: 'Wallet', icon: <FaWallet />, href: '/wallet' },
     { name: 'Stats', icon: <FaChartPie />, href: '/stats' },
   ];
 
-  // Itens para locatário (mostrar só Cards e Wallet)
+  // Itens para locatário (mostrar Cards e Wallet)
   const navItemsLocatario = [
     { name: 'Cards', icon: <FaCreditCard />, href: '/cards' },
     { name: 'Wallet', icon: <FaWallet />, href: '/wallet' },
