@@ -1,8 +1,14 @@
+'use client';
+
 import './globals.css';
 import SidebarWrapper from './SidebarWrapper';
 import { UserProvider } from '@/context/UserContext';
+import { AnimatePresence, motion } from 'framer-motion';
+import { usePathname } from 'next/navigation';
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
+  const pathname = usePathname();
+
   return (
     <html lang="pt-BR">
       <head>
@@ -15,7 +21,20 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
       </head>
       <body className="flex bg-gray-50 min-h-screen">
         <UserProvider>
-          <SidebarWrapper>{children}</SidebarWrapper>
+          <SidebarWrapper>
+            <AnimatePresence mode="wait" initial={false}>
+              <motion.div
+                key={pathname} // detecta mudança de rota para animar
+                initial={{ opacity: 0, y: 10 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: -10 }}
+                transition={{ duration: 0.25 }}
+                style={{ width: '100%' }}
+              >
+                {children}
+              </motion.div>
+            </AnimatePresence>
+          </SidebarWrapper>
         </UserProvider>
       </body>
     </html>
