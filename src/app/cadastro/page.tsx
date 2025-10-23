@@ -16,20 +16,28 @@ export default function CadastroPage() {
   const [nome, setNome] = useState('');
   const [email, setEmail] = useState('');
   const [senha, setSenha] = useState('');
+  const [tipoUsuario, setTipoUsuario] = useState<'locador' | 'locatario' | ''>('');
   const [erro, setErro] = useState('');
 
   const cadastrar = async () => {
+    if (!tipoUsuario) {
+      setErro('Selecione se você é Locador ou Locatário.');
+      return;
+    }
+
     try {
       const userCred = await createUserWithEmailAndPassword(auth, email, senha);
       const user = userCred.user;
 
-      // Salva dados do usuário no Firestore
+      // Salva no Firestore
       await setDoc(doc(db, 'usuarios', user.uid), {
         nome,
         email,
+        tipo: tipoUsuario,
         criadoEm: new Date(),
       });
 
+      // Após cadastro, vai para a tela de login
       router.push('/login');
     } catch (e: any) {
       console.error('Erro no cadastro:', e);
@@ -44,12 +52,11 @@ export default function CadastroPage() {
 
       <input
         type="text"
-        placeholder="Nome de usuário"
+        placeholder="Nome"
         value={nome}
         onChange={(e) => setNome(e.target.value)}
         style={{ width: '100%', marginBottom: 10, padding: 8 }}
       />
-
       <input
         type="email"
         placeholder="E-mail"
@@ -57,7 +64,6 @@ export default function CadastroPage() {
         onChange={(e) => setEmail(e.target.value)}
         style={{ width: '100%', marginBottom: 10, padding: 8 }}
       />
-
       <input
         type="password"
         placeholder="Senha"
@@ -65,6 +71,30 @@ export default function CadastroPage() {
         onChange={(e) => setSenha(e.target.value)}
         style={{ width: '100%', marginBottom: 10, padding: 8 }}
       />
+
+      <div style={{ marginBottom: 16 }}>
+        <label>
+          <input
+            type="radio"
+            name="tipoUsuario"
+            value="locador"
+            checked={tipoUsuario === 'locador'}
+            onChange={(e) => setTipoUsuario(e.target.value as 'locador')}
+          />{' '}
+          Locador
+        </label>
+        <br />
+        <label>
+          <input
+            type="radio"
+            name="tipoUsuario"
+            value="locatario"
+            checked={tipoUsuario === 'locatario'}
+            onChange={(e) => setTipoUsuario(e.target.value as 'locatario')}
+          />{' '}
+          Locatário
+        </label>
+      </div>
 
       <button onClick={cadastrar} style={{ width: '100%', padding: 10 }}>
         Cadastrar

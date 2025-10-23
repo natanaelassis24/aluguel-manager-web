@@ -1,7 +1,7 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import { useRouter, usePathname } from 'next/navigation';
+import { useRouter } from 'next/navigation';
 // Firebase
 import { onAuthStateChanged } from 'firebase/auth';
 import { auth } from '@/lib/firebase';
@@ -29,7 +29,8 @@ interface Aluguel {
 }
 
 // Funções utilitárias
-const formatarMoeda = (valor: number) => `R$ ${valor.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}`;
+const formatarMoeda = (valor: number) =>
+    `R$ ${valor.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}`;
 function calcularTotalRecebido(alugueis: Aluguel[]) {
     return alugueis.filter(a => a.pago).reduce((acc, a) => acc + a.valor, 0);
 }
@@ -43,7 +44,6 @@ function gerarDadosGrafico(alugueis: Aluguel[]) {
 
 export default function DashboardPage() {
     const router = useRouter();
-    const pathname = usePathname();
     const [loading, setLoading] = useState(true);
     const [alugueis, setAlugueis] = useState<Aluguel[]>([]);
     const [userName, setUserName] = useState<string>('Gestor');
@@ -55,7 +55,7 @@ export default function DashboardPage() {
         try {
             // Buscar o nome do usuário no Firestore
             const userDoc = await getDoc(doc(db, 'usuarios', userId));
-            
+
             if (userDoc.exists()) {
                 const dados = userDoc.data();
                 setUserName(dados.nome || 'Gestor'); // Nome salvo ou fallback
@@ -75,14 +75,29 @@ export default function DashboardPage() {
     }
 
     useEffect(() => {
-        const unsubscribe = onAuthStateChanged(auth, (user) => {
+        const unsubscribe = onAuthStateChanged(auth, async (user) => {
             if (!user) {
-                setLoading(false);
-                setAlugueis([]);
-                setUserName('Visitante');
-            } else {
-                carregarDados(user.uid || 'placeholder');
+                router.push('/login'); // Redireciona para login se não estiver logado
+                return;
             }
+
+            const db = getFirestore();
+            const userDoc = await getDoc(doc(db, 'usuarios', user.uid));
+
+            if (!userDoc.exists()) {
+                router.push('/login'); // Usuário não existe no Firestore
+                return;
+            }
+
+            const tipo = userDoc.data().tipo;
+
+            if (tipo !== 'locador') {
+                router.push('/locatario'); // Redireciona locatários para a página correta
+                return;
+            }
+
+            // Se for locador, carrega os dados do dashboard
+            carregarDados(user.uid);
         });
 
         return () => unsubscribe();
