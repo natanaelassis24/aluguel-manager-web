@@ -5,8 +5,6 @@ import { createUserWithEmailAndPassword } from 'firebase/auth';
 import { auth } from '@/lib/firebase';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
-
-// Firestore
 import { getFirestore, doc, setDoc } from 'firebase/firestore';
 
 export default function CadastroPage() {
@@ -20,16 +18,19 @@ export default function CadastroPage() {
   const [erro, setErro] = useState('');
 
   const cadastrar = async () => {
+    setErro('');
+
     if (!tipoUsuario) {
       setErro('Selecione se você é Locador ou Locatário.');
       return;
     }
 
     try {
+      // Cria o usuário no Firebase Authentication
       const userCred = await createUserWithEmailAndPassword(auth, email, senha);
       const user = userCred.user;
 
-      // Salva no Firestore
+      // Grava o documento do usuário no Firestore
       await setDoc(doc(db, 'usuarios', user.uid), {
         nome,
         email,
@@ -37,14 +38,26 @@ export default function CadastroPage() {
         criadoEm: new Date(),
       });
 
-      // Após cadastro, vai para a tela de login
+      // Redireciona para a tela de login
       router.push('/login');
     } catch (e: any) {
-      console.error('Erro no cadastro:', e);
-      setErro(e.message || 'Erro ao cadastrar. Tente novamente.');
+      console.error('Erro no cadastro:', e.code, e.message);
+      switch (e.code) {
+        case 'auth/email-already-in-use':
+          setErro('Este e-mail já está em uso.');
+          break;
+        case 'auth/invalid-email':
+          setErro('E-mail inválido.');
+          break;
+        case 'auth/weak-password':
+          setErro('A senha deve ter pelo menos 6 caracteres.');
+          break;
+        default:
+          setErro('Erro ao cadastrar. Tente novamente.');
+      }
     }
   };
-
+                               
   return (
     <div style={{ maxWidth: 400, margin: 'auto', padding: 20 }}>
       <h1>Cadastro</h1>
