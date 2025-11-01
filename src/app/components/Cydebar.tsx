@@ -1,15 +1,15 @@
 'use client';
 
-import Image from 'next/image'; 
+import Image from 'next/image';
 import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
 import {
   FaHome,
   FaCreditCard,
   FaWallet,
-  FaChartPie,
   FaCog,
   FaSignOutAlt,
+  FaBuilding,
 } from 'react-icons/fa';
 import { signOut } from 'firebase/auth';
 import { auth } from '@/lib/firebase';
@@ -25,7 +25,7 @@ export default function IconNavbar({ userType }: IconNavbarProps) {
   const router = useRouter();
 
   const linkClasses = (href: string) =>
-    `flex items-center justify-center p-4 rounded-xl mx-2 transition duration-200 ease-in-out ${
+    `flex items-center justify-center p-4 rounded-xl transition duration-200 ease-in-out ${
       pathname === href
         ? 'bg-teal-700/50 text-white'
         : 'text-gray-400 hover:bg-gray-800 hover:text-white'
@@ -37,34 +37,34 @@ export default function IconNavbar({ userType }: IconNavbarProps) {
       router.push('/login');
     } catch (error) {
       console.error('Erro ao fazer logout:', error);
-      alert('Não foi possível deslogar. Tente novamente.');
+      alert('Nao foi possivel deslogar. Tente novamente.');
     }
   };
 
-  // Itens para locador (removendo 'Cards')
   const navItemsLocador = [
     { name: 'Dashboard', icon: <FaHome />, href: '/dashboard' },
     { name: 'Wallet', icon: <FaWallet />, href: '/wallet' },
-    { name: 'Stats', icon: <FaChartPie />, href: '/stats' },
+    { name: 'Imoveis', icon: <FaBuilding />, href: '/cadastro-produto' },
   ];
 
-  // Itens para locatário (incluir Home, Cards e Wallet)
   const navItemsLocatario = [
-    { name: 'Home', icon: <FaHome />, href: '/locatario' },  // Botão Home para locatário
+    { name: 'Home', icon: <FaHome />, href: '/locatario' },
     { name: 'Cards', icon: <FaCreditCard />, href: '/cards' },
-    { name: 'Wallet', icon: <FaWallet />, href: '/wallet' },
+    // Wallet removida do locatario
   ];
 
   const navItems = userType === 'locador' ? navItemsLocador : navItemsLocatario;
 
-  const bottomItems = [
-    { name: 'Settings', icon: <FaCog />, href: '/settings' },
-  ];
-
   return (
-    <aside className="fixed top-0 left-0 h-screen w-20 bg-gray-900 border-r border-gray-800 flex flex-col justify-between items-center py-6 z-50">
-      {/* Top Section */}
-      <div className="flex flex-col items-center space-y-8">
+    <aside
+      className="
+        fixed bg-gray-900 border-gray-800 flex justify-between items-center z-50
+        md:flex-col md:justify-between md:py-6 md:w-20 md:h-screen md:left-0 md:top-0 md:border-r
+        w-full h-16 bottom-0 left-0 border-t
+      "
+    >
+      {/* Top Section Desktop */}
+      <div className="hidden md:flex flex-col items-center w-full">
         {/* Logo */}
         <div className="w-[60px] h-[60px] rounded-full overflow-hidden flex items-center justify-center">
           <Image
@@ -77,13 +77,13 @@ export default function IconNavbar({ userType }: IconNavbarProps) {
           />
         </div>
 
-        {/* Navegação */}
-        <nav className="flex flex-col gap-4 w-full">
+        {/* Navegação principal */}
+        <nav className="flex flex-col gap-2 mt-4 w-full items-center">
           {navItems.map(({ name, href, icon }) => (
             <Link
               key={name}
               href={href}
-              className={linkClasses(href)}
+              className={`${linkClasses(href)} md:mx-2`}
               aria-label={name}
               title={name}
             >
@@ -93,9 +93,30 @@ export default function IconNavbar({ userType }: IconNavbarProps) {
         </nav>
       </div>
 
-      {/* Bottom Section: Settings + Logout */}
-      <div className="flex flex-col items-center gap-4 w-full">
-        {bottomItems.map(({ name, href, icon }) => (
+      {/* Bottom Section Desktop: Config + Logout */}
+      <div className="hidden md:flex flex-col items-center gap-4 w-full pb-4">
+        <Link
+          href="/settings"
+          className={linkClasses('/settings')}
+          aria-label="Configuracoes"
+          title="Configuracoes"
+        >
+          <FaCog size={24} />
+        </Link>
+
+        <button
+          onClick={handleLogout}
+          className="flex items-center justify-center p-4 text-gray-400 hover:bg-gray-800 hover:text-white rounded-xl mx-2 transition duration-200"
+          aria-label="Logout"
+          title="Logout"
+        >
+          <FaSignOutAlt size={28} />
+        </button>
+      </div>
+
+      {/* Mobile Navigation */}
+      <nav className="flex md:hidden w-full justify-around items-center">
+        {navItems.map(({ name, href, icon }) => (
           <Link
             key={name}
             href={href}
@@ -107,15 +128,26 @@ export default function IconNavbar({ userType }: IconNavbarProps) {
           </Link>
         ))}
 
+        {/* Configurações Mobile */}
+        <Link
+          href="/settings"
+          className="flex items-center justify-center p-4 text-gray-400 hover:text-white"
+          aria-label="Configuracoes"
+          title="Configuracoes"
+        >
+          <FaCog size={22} />
+        </Link>
+
+        {/* Logout Mobile */}
         <button
           onClick={handleLogout}
-          className="flex items-center justify-center p-4 text-gray-400 hover:bg-gray-800 hover:text-white rounded-xl mx-2 transition duration-200"
+          className="flex items-center justify-center p-4 text-gray-400 hover:text-white"
           aria-label="Logout"
           title="Logout"
         >
-          <FaSignOutAlt size={28} />
+          <FaSignOutAlt size={22} />
         </button>
-      </div>
+      </nav>
     </aside>
   );
 }
