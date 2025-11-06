@@ -1,36 +1,185 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+Descrição
 
-## Getting Started
+O Painel de Gestão de Aluguéis é uma aplicação web desenvolvida para auxiliar locadores no gerenciamento de contratos, pagamentos e pendências de aluguel.
+O sistema apresenta gráficos financeiros, histórico de pagamentos e uma interface moderna e responsiva voltada à administração imobiliária.
 
-First, run the development server:
+Tecnologias Utilizadas
 
-```bash
+Next.js – Framework React para renderização no lado do servidor.
+
+React – Biblioteca principal para construção da interface.
+
+TypeScript – Tipagem estática para maior robustez e segurança.
+
+Firebase – Autenticação e banco de dados em nuvem (Firestore).
+
+Tailwind CSS – Estilização responsiva e padronizada.
+
+Recharts – Exibição de gráficos interativos.
+
+Framer Motion – Transições animadas entre telas.
+
+Estrutura do Projeto
+
+/app – Contém as páginas principais, incluindo dashboard, imóveis e pagamentos.
+
+/context – Gerenciamento global de usuário.
+
+/lib – Configurações e inicialização do Firebase.
+
+/components – Componentes reutilizáveis de interface.
+
+Funcionalidades
+
+Login e autenticação de usuários.
+
+Controle de contratos e pagamentos.
+
+Exibição do fluxo mensal de aluguéis.
+
+Resumo financeiro com totais recebidos e pendentes.
+
+Interface totalmente responsiva.
+
+Animações suaves e navegação fluida.
+
+Instalação e Execução
+
+Clone o repositório:
+
+git clone https://github.com/seu-usuario/nome-do-repositorio.git
+
+
+Acesse o diretório do projeto:
+
+cd nome-do-repositorio
+
+
+Instale as dependências:
+
+npm install
+
+
+Configure o ambiente criando o arquivo .env.local:
+
+NEXT_PUBLIC_FIREBASE_API_KEY=xxxx
+NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN=xxxx
+NEXT_PUBLIC_FIREBASE_PROJECT_ID=xxxx
+
+
+Execute o projeto:
+
 npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
-```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+Acesse no navegador:
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+http://localhost:3000
 
-## Learn More
+Desenvolvedor
 
-To learn more about Next.js, take a look at the following resources:
+Natanel A. De Assis
+Desenvolvedor Full Stack
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+Sobre a Yggdrasil
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+A Yggdrasil é uma empresa voltada ao desenvolvimento de soluções tecnológicas inovadoras, com foco em automação, eficiência e design inteligente.
+Seu objetivo é oferecer sistemas personalizados que simplificam processos, otimizam a gestão e elevam o desempenho de negócios em diversas áreas, sempre com qualidade e segurança.
 
-## Deploy on Vercel
+Licença
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+© Yggdrasil – Todos os direitos reservados.
+Este software é de propriedade privada da empresa Yggdrasil.
+A redistribuição, cópia, modificação ou uso não autorizado, total ou parcial, é estritamente proibido.Descrição
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+O Painel de Gestão de Aluguéis é uma aplicação web desenvolvida para auxiliar locadores no gerenciamento de contratos, pagamentos e pendências de aluguel.
+O sistema apresenta gráficos financeiros, histórico de pagamentos e uma interface moderna e responsiva voltada à administração imobiliária.
+
+Tecnologias Utilizadas
+
+Next.js – Framework React para renderização no lado do servidor.
+
+React – Biblioteca principal para construção da interface.
+
+TypeScript – Tipagem estática para maior robustez e segurança.
+
+Firebase – Autenticação e banco de dados em nuvem (Firestore).
+
+Tailwind CSS – Estilização responsiva e padronizada.
+
+Recharts – Exibição de gráficos interativos.
+
+Framer Motion – Transições animadas entre telas.
+
+Estrutura do Projeto
+
+/app – Contém as páginas principais, incluindo dashboard, imóveis e pagamentos.
+
+/context – Gerenciamento global de usuário.
+
+/lib – Configurações e inicialização do Firebase.
+
+/components – Componentes reutilizáveis de interface.
+
+Funcionalidades
+
+Login e autenticação de usuários.
+
+Controle de contratos e pagamentos.
+
+Exibição do fluxo mensal de aluguéis.
+
+Resumo financeiro com totais recebidos e pendentes.
+
+Interface totalmente responsiva.
+
+Animações suaves e navegação fluida.
+
+Instalação e Execução
+
+Clone o repositório:
+
+git clone https://github.com/seu-usuario/nome-do-repositorio.git
+
+
+Acesse o diretório do projeto:
+
+cd nome-do-repositorio
+
+
+Instale as dependências:
+
+npm install
+
+
+Configure o ambiente criando o arquivo .env.local:
+
+NEXT_PUBLIC_FIREBASE_API_KEY=xxxx
+NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN=xxxx
+NEXT_PUBLIC_FIREBASE_PROJECT_ID=xxxx
+
+
+Execute o projeto:
+
+npm run dev
+
+
+Acesse no navegador:
+
+http://localhost:3000
+
+Desenvolvedor
+
+Natanel A. De Assis
+Desenvolvedor Full Stack
+
+Sobre a Yggdrasil
+
+A Yggdrasil é uma empresa voltada ao desenvolvimento de soluções tecnológicas inovadoras, com foco em automação, eficiência e design inteligente.
+Seu objetivo é oferecer sistemas personalizados que simplificam processos, otimizam a gestão e elevam o desempenho de negócios em diversas áreas, sempre com qualidade e segurança.
+
+Licença
+
+© Yggdrasil – Todos os direitos reservados.
+Este software é de propriedade privada da empresa Yggdrasil.
+A redistribuição, cópia, modificação ou uso não autorizado, total ou parcial, é estritamente proibido.
