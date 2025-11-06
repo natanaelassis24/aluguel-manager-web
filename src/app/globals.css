@@ -3,6 +3,7 @@
 :root {
   --background: #ffffff;
   --foreground: #171717;
+  --sidebar-width: 80px; /* largura exata da sidebar */
 }
 
 @theme inline {
@@ -12,6 +13,7 @@
   --font-mono: var(--font-geist-mono);
 }
 
+/* Tema escuro automático */
 @media (prefers-color-scheme: dark) {
   :root {
     --background: #0a0a0a;
@@ -23,4 +25,56 @@ body {
   background: var(--background);
   color: var(--foreground);
   font-family: Arial, Helvetica, sans-serif;
+  min-height: 100vh;
+  overflow-x: hidden;
+}
+
+/* ===============================
+   Desktop - Sidebar fixa à esquerda
+   =============================== */
+@media (min-width: 640px) {
+  body {
+    display: flex;
+    flex-direction: row;
+  }
+
+  aside {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: var(--sidebar-width);
+    height: 100vh;
+    z-index: 50;
+  }
+
+  main {
+    margin-left: var(--sidebar-width); /* encaixa exatamente ao lado da sidebar */
+    padding: 1.5rem;
+    width: calc(100% - var(--sidebar-width));
+    background-color: #0d1721; /* igual ao fundo da página */
+    transition: all 0.3s ease;
+  }
+}
+
+/* ===============================
+   Mobile - Sidebar embaixo
+   =============================== */
+@media (max-width: 639px) {
+  aside {
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    width: 100%;
+    height: 60px;
+    z-index: 50;
+  }
+
+  main {
+    margin: 0;
+    width: 100%;
+    padding: 1rem;
+    padding-bottom: 5rem; /* espaço pra barra inferior */
+    background-color: #0d1721;
+    transition: all 0.3s ease;
+  }
 }
