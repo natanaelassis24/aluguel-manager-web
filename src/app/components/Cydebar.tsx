@@ -37,20 +37,21 @@ export default function IconNavbar({ userType }: IconNavbarProps) {
       router.push('/login');
     } catch (error) {
       console.error('Erro ao fazer logout:', error);
-      alert('Nao foi possivel deslogar. Tente novamente.');
+      alert('Não foi possível deslogar. Tente novamente.');
     }
   };
 
+  // 🔹 Locador continua igual
   const navItemsLocador = [
     { name: 'Dashboard', icon: <FaHome />, href: '/dashboard' },
     { name: 'Wallet', icon: <FaWallet />, href: '/wallet' },
-    { name: 'Imoveis', icon: <FaBuilding />, href: '/cadastro-produto' },
+    { name: 'Imóveis', icon: <FaBuilding />, href: '/cadastro-produto' },
   ];
 
+  // 🔹 Locatário: substituímos “Cards” por “Pagamentos”
   const navItemsLocatario = [
     { name: 'Home', icon: <FaHome />, href: '/locatario' },
-    { name: 'Cards', icon: <FaCreditCard />, href: '/cards' },
-    // Wallet removida do locatario
+    { name: 'Pagamentos', icon: <FaCreditCard />, href: '/pagamentos' }, // 👈 aqui foi trocado o caminho
   ];
 
   const navItems = userType === 'locador' ? navItemsLocador : navItemsLocatario;
@@ -65,7 +66,6 @@ export default function IconNavbar({ userType }: IconNavbarProps) {
     >
       {/* Top Section Desktop */}
       <div className="hidden md:flex flex-col items-center w-full">
-        {/* Logo */}
         <div className="w-[60px] h-[60px] rounded-full overflow-hidden flex items-center justify-center">
           <Image
             src="/logo.png"
@@ -77,7 +77,6 @@ export default function IconNavbar({ userType }: IconNavbarProps) {
           />
         </div>
 
-        {/* Navegação principal */}
         <nav className="flex flex-col gap-2 mt-4 w-full items-center">
           {navItems.map(({ name, href, icon }) => (
             <Link
@@ -93,13 +92,13 @@ export default function IconNavbar({ userType }: IconNavbarProps) {
         </nav>
       </div>
 
-      {/* Bottom Section Desktop: Config + Logout */}
+      {/* Bottom Section Desktop */}
       <div className="hidden md:flex flex-col items-center gap-4 w-full pb-4">
         <Link
           href="/settings"
           className={linkClasses('/settings')}
-          aria-label="Configuracoes"
-          title="Configuracoes"
+          aria-label="Configurações"
+          title="Configurações"
         >
           <FaCog size={24} />
         </Link>
@@ -128,17 +127,15 @@ export default function IconNavbar({ userType }: IconNavbarProps) {
           </Link>
         ))}
 
-        {/* Configurações Mobile */}
         <Link
           href="/settings"
           className="flex items-center justify-center p-4 text-gray-400 hover:text-white"
-          aria-label="Configuracoes"
-          title="Configuracoes"
+          aria-label="Configurações"
+          title="Configurações"
         >
           <FaCog size={22} />
         </Link>
 
-        {/* Logout Mobile */}
         <button
           onClick={handleLogout}
           className="flex items-center justify-center p-4 text-gray-400 hover:text-white"
